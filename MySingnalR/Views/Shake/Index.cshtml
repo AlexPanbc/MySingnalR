@@ -1,0 +1,94 @@
+﻿
+<div class="jumbotron">
+    <h1>抖啊抖</h1>
+    <h2><input id="Button1" type="button" value="点我点我" onclick="ddd()" /></h2>
+    <h3></h3>
+    <h4></h4>
+
+</div>
+
+<head>
+    <meta name="aa" content="width=device-width" />
+    <title></title>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/Scripts/jquery.signalR-2.2.0.min.js"></script>
+    <script src="http://localhost:12074/signalr/hubs"></script>
+
+    <script type="text/javascript">
+
+        var id = "1111";
+        $.connection.hub.qs = { "uid": 1111 };
+        $.connection.hub.url = "http://localhost:12074/signalr";
+        var shake = $.connection.shakeHub;
+        shake.client.reset = reset;
+
+        //创建链接
+        $.connection.hub.start().done(function () {
+            mobileInit();
+        }).fail(function (e) {
+            if (e.source === 'HubException') {
+                alert(e.message + ' : ' + e.data.user);
+            }
+        });
+
+        //移动端初始化
+        function mobileInit() {
+            //移动端初始化
+            shake.server.mobileInit(id).done(function (data) {
+                if (data) $("#aaaa").html("抖啊抖");
+            }).fail(function (e) {
+                if (e.source === 'HubException') {
+                    alert(e.message + ' : ' + e.data.user);
+                }
+            });
+        }
+
+        function reset() {
+            ///PC初始化，通知所有移动端重置
+            $("h4").html("重置");
+        }
+
+        function ddd() {
+            shake.server.push(id, 1).done(function (data) {
+                $("h3").html(data);
+            });
+        }
+
+
+        //手机摇动的频率
+        var SHAKE_THRESHOLD = 3000;
+        var last_update = 0;
+        var x = y = z = last_x = last_y = last_z = 0;
+        function init() {
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', deviceMotionHandler, false);
+            } else {
+                alert('not support mobile event');
+            }
+        }
+
+        var count = 0;
+        function deviceMotionHandler(eventData) {
+            var acceleration = eventData.accelerationIncludingGravity;
+            var curTime = new Date().getTime();
+            if ((curTime - last_update) > 100) {
+                var diffTime = curTime - last_update;
+                last_update = curTime;
+                x = acceleration.x;
+                y = acceleration.y;
+                z = acceleration.z;
+                var speed = Math.abs(x + y + z - last_x - last_y - last_z) / diffTime * 10000;
+
+                if (speed > SHAKE_THRESHOLD) {
+                    count++;
+                    shake.server.push(id, count).done(function (data) {
+                        $("h3").html(data);
+                    });
+                }
+                last_x = x;
+                last_y = y;
+                last_z = z;
+            }
+        }
+    </script>
+</head>

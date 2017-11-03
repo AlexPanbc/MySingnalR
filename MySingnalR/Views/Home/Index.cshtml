@@ -1,0 +1,72 @@
+﻿<div class="jumbotron">
+    <h1>PC端</h1>
+    <p class="lead">等待移动端相应...</p>
+    <p class="lead">在线人数</p>    <p class="lead" id="sumcount"></p>
+</div>
+<div class="row" id="aaaaaa">
+
+</div>
+
+<script type="text/html" id="Mydiv">
+    <div class="col-md-4">
+        <h2>{Name}</h2>
+        <p id="{ConnectionId}">
+            {count}
+        </p>
+        <p><a class="btn btn-default" href="{Img}">看美女 &raquo;</a></p>
+    </div>
+</script>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/Scripts/jquery.signalR-2.2.0.min.js"></script>
+    <script src="http://localhost:12074/signalr/hubs"></script>
+
+    <script type="text/javascript">
+        var id = "1111";
+        $.connection.hub.qs = { "uid": 1111 };
+        $.connection.hub.url = "http://localhost:12074/signalr";
+        var shake = $.connection.shakeHub;
+        shake.client.putUser = putUser;
+        shake.client.myCount = myCount;
+
+        //创建链接
+        $.connection.hub.start().done(function () {
+            pcInit();
+        }).fail(function (e) {
+            if (e.source === 'HubException') {
+                alert(e.message + ' : ' + e.data.user);
+            }
+        });
+
+        //接收大屏幕发送的消息
+        function putUser(user, count) {
+            var mydiv = $("#Mydiv").html();
+            mydiv = mydiv.replace("{Name}", user.Name);
+            mydiv = mydiv.replace("{count}", user.Count);
+            mydiv = mydiv.replace("{Img}", user.Img);
+            mydiv = mydiv.replace("{ConnectionId}", user.ConnectionId);
+            $("#aaaaaa").html($("#aaaaaa").html() + mydiv);
+            $("#sumcount").html(count);
+        }
+
+        //PC端初始化
+        function pcInit() {
+            //PC端初始化
+            shake.server.pcInit(id).done(function (data) {
+                $("#sumcount").html(data);
+            }).fail(function (e) {
+                if (e.source === 'HubException') {
+                    alert(e.message + ' : ' + e.data.user);
+                }
+            });
+        }
+
+        function myCount(data) {
+            //接收抖一抖数据
+            $("#" + data.ConnectionId).html(data.Count);///移动端抖动的次数推送给PC
+        }
+
+    </script>
+</head>
